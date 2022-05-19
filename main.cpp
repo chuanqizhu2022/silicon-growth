@@ -30,7 +30,7 @@ char outFilePhi_xy[64];
 int nstep, pstep;
 double dtime, L, dx;
 double gamma0, delta, mobi;
-double astre, astrem;
+double astre, astrem, al0;
 double M0, W0, A0, S0, F0;
 double Tm, dH;
 double temp0, Tg, Tv, Tr;
@@ -141,6 +141,7 @@ int main(int argc, char *argv[])
     mobi = 1.68e-9;
     gamma0 = 0.5;
     astre = 0.00;
+    al0 = 35.0 / 180.0 * PI;
     astrem = 0.0;
     Tm = 1687.0;
     // dH = 0.7e7;
@@ -239,10 +240,24 @@ int main(int argc, char *argv[])
         double termiikk, termjjkk;
         double miijj;
 
+        double xxp, xyp, xzp, yxp, yyp, yzp, zxp, zyp, zzp;
+        double I1, I2, I3;
+        double cosap, ep;
+        double dcosapdphix, dcosapdphiy, dcosapdphiz;
+        double dcosapdx, dcosapdy, dcosapdz;
+
         double phidx, phidy, phidz;
+        double phidxp, phidyp, phidzp;
         double phidxx, phidyy, phidzz;
+        double phidxpx, phidypx, phidzpx;
+        double phidxpy, phidypy, phidzpy;
+        double phidxpz, phidypz, phidzpz;
         double phidxy, phidxz, phidyz;
-        double phiabs, phiabsii;
+        double phiabs2, phiabsii;
+        double termx0, termx1, termx2, termx3;
+        double termy0, termy1, termy2, termy3;
+        double termz0, termz1, termz2, termz3;
+        double termx, termy, termz;
         double sum1, pddtt;
 
     start:;
@@ -370,11 +385,102 @@ int main(int argc, char *argv[])
                             {
                                 kk = phiIdx[n3][i][j][k];
 
+                                phidx = (phi[kk][ip][j][k] - phi[kk][im][j][k]) / 2.0 / dx;
+                                phidy = (phi[kk][i][jp][k] - phi[kk][i][jm][k]) / 2.0 / dx;
+                                phidz = (phi[kk][i][j][kp] - phi[kk][i][j][km]) / 2.0 / dx;
+
                                 phidxx = (phi[kk][ip][j][k] + phi[kk][im][j][k] - 2.0 * phi[kk][i][j][k]) / dx / dx;
                                 phidyy = (phi[kk][i][jp][k] + phi[kk][i][jm][k] - 2.0 * phi[kk][i][j][k]) / dx / dx;
                                 phidzz = (phi[kk][i][j][kp] + phi[kk][i][j][km] - 2.0 * phi[kk][i][j][k]) / dx / dx;
 
-                                termiikk = aij[ii][kk] * (phidxx + phidyy + phidzz);
+                                phidxy = (phi[kk][ip][jp][k] + phi[kk][im][jm][k] - phi[kk][im][jp][k] - phi[kk][ip][jm][k]) / 4.0 / dx / dx;
+                                phidxz = (phi[kk][ip][j][kp] + phi[kk][im][j][km] - phi[kk][im][j][kp] - phi[kk][ip][j][km]) / 4.0 / dx / dx;
+                                phidyz = (phi[kk][i][jp][kp] + phi[kk][i][jm][km] - phi[kk][i][jm][kp] - phi[kk][i][jp][km]) / 4.0 / dx / dx;
+
+                                phiabs2 = phidx * phidx + phidy * phidy + phidz * phidz;
+
+                                if (anij[ii][kk] == 1)
+                                {
+                                    epsilon0 = sqrt(aij[ii][kk]);
+
+                                    th = thij[ii][kk];
+                                    vp = vpij[ii][kk];
+                                    eta = etaij[ii][kk];
+
+                                    xxp = cos(th) * cos(vp);
+                                    yxp = sin(th) * cos(vp);
+                                    zxp = sin(vp);
+                                    xyp = -sin(th) * cos(eta) - cos(th) * sin(vp) * sin(eta);
+                                    yyp = cos(th) * cos(eta) - sin(th) * sin(vp) * sin(eta);
+                                    zyp = cos(vp) * sin(eta);
+                                    xzp = sin(eta) * sin(th) - cos(eta) * cos(th) * sin(vp);
+                                    yzp = -sin(eta) * cos(th) - cos(eta) * sin(th) * sin(vp);
+                                    zzp = cos(eta) * cos(vp);
+
+                                    I1 = xxp + yxp + zxp;
+                                    I2 = xyp + yyp + zyp;
+                                    I3 = xzp + yzp + zzp;
+
+                                    cosap = (I1 * phidxp + I2 * phidyp + I3 * phidzp) / sqrt(3.0);
+
+                                    if (cosap > cos(al0))
+                                    {
+                                        phidxp = phidx * xxp + phidy * yxp + phidz * zxp;
+                                        phidyp = phidx * xyp + phidy * yyp + phidz * zyp;
+                                        phidzp = phidx * xzp + phidy * yzp + phidz * zzp;
+
+                                        phidxpx = phidxx * xxp + phidxy * yxp + phidxz * zxp;
+                                        phidypx = phidxx * xyp + phidxy * yyp + phidxz * zyp;
+                                        phidzpx = phidxx * xzp + phidxy * yzp + phidxz * zzp;
+
+                                        phidxpy = phidxy * xxp + phidyy * yxp + phidyz * zxp;
+                                        phidypy = phidxy * xyp + phidyy * yyp + phidyz * zyp;
+                                        phidzpy = phidxy * xzp + phidyy * yzp + phidyz * zzp;
+
+                                        phidxpz = phidxz * xxp + phidyz * yxp + phidzz * zxp;
+                                        phidypz = phidxz * xyp + phidyz * yyp + phidzz * zyp;
+                                        phidzpz = phidxz * xzp + phidyz * yzp + phidzz * zzp;
+
+                                        ep = epsilon0 * (1.0 + astre * (abs(cosap) + tan(al0) * sqrt(1.0 - cosap * cosap)));
+
+                                        dcosapdphix = (I1 * phidxp / abs(phidxp) * xxp + I2 * phidyp / abs(phidyp) * xyp + I3 * phidzp / abs(phidzp) * xzp) / sqrt(3.0);
+                                        dcosapdphiy = (I1 * phidxp / abs(phidxp) * yxp + I2 * phidyp / abs(phidyp) * yyp + I3 * phidzp / abs(phidzp) * yzp) / sqrt(3.0);
+                                        dcosapdphiz = (I1 * phidxp / abs(phidxp) * zxp + I2 * phidyp / abs(phidyp) * zyp + I3 * phidzp / abs(phidzp) * zzp) / sqrt(3.0);
+
+                                        dcosapdx = (I1 * phidxp / abs(phidxp) * phidxpx + I2 * phidyp / abs(phidyp) * phidypx + I3 * phidzp / abs(phidzp) * phidzpx) / sqrt(3.0);
+                                        dcosapdy = (I1 * phidxp / abs(phidxp) * phidxpy + I2 * phidyp / abs(phidyp) * phidypy + I3 * phidzp / abs(phidzp) * phidzpy) / sqrt(3.0);
+                                        dcosapdz = (I1 * phidxp / abs(phidxp) * phidxpz + I2 * phidyp / abs(phidyp) * phidypz + I3 * phidzp / abs(phidzp) * phidzpz) / sqrt(3.0);
+
+                                        termx0 = 2.0 * ep * dcosapdx * epsilon0 * astre * (1.0 - tan(al0) * abs(cosap) / sqrt(1.0 - cosap * cosap)) * phidx + phidxx * ep * ep;
+                                        termx1 = dcosapdx * dcosapdphix * pow(epsilon0 * astre * (1.0 - tan(al0) * abs(cosap) / sqrt(1.0 - cosap * cosap)), 2.0) * phiabs2;
+                                        termx2 = ep * epsilon0 * astre * dcosapdphix * (-tan(al0)) / pow(1.0 - cosap * cosap, 1.5) * dcosapdx * phiabs2;
+                                        termx3 = ep * epsilon0 * astre * dcosapdphix * (1.0 - tan(al0) * abs(cosap) / sqrt(1.0 - cosap * cosap)) * phiabs2 * (2.0 * phidx * phidxx + 2.0 * phidy * phidxy + 2.0 * phidz * phidxz);
+                                        termx = termx0 + termx1 + termx2 + termx3;
+
+                                        termy0 = 2.0 * ep * dcosapdy * epsilon0 * astre * (1.0 - tan(al0) * abs(cosap) / sqrt(1.0 - cosap * cosap)) * phidy + phidyy * ep * ep;
+                                        termy1 = dcosapdy * dcosapdphiy * pow(epsilon0 * astre * (1.0 - tan(al0) * abs(cosap) / sqrt(1.0 - cosap * cosap)), 2.0) * phiabs2;
+                                        termy2 = ep * epsilon0 * astre * dcosapdphiy * (-tan(al0)) / pow(1.0 - cosap * cosap, 1.5) * dcosapdy * phiabs2;
+                                        termy3 = ep * epsilon0 * astre * dcosapdphiy * (1.0 - tan(al0) * abs(cosap) / sqrt(1.0 - cosap * cosap)) * phiabs2 * (2.0 * phidx * phidxx + 2.0 * phidy * phidxy + 2.0 * phidz * phidxz);
+                                        termy = termy0 + termy1 + termy2 + termy3;
+
+                                        termz0 = 2.0 * ep * dcosapdz * epsilon0 * astre * (1.0 - tan(al0) * abs(cosap) / sqrt(1.0 - cosap * cosap)) * phidz + phidzz * ep * ep;
+                                        termz1 = dcosapdz * dcosapdphiz * pow(epsilon0 * astre * (1.0 - tan(al0) * abs(cosap) / sqrt(1.0 - cosap * cosap)), 2.0) * phiabs2;
+                                        termz2 = ep * epsilon0 * astre * dcosapdphiz * (-tan(al0)) / pow(1.0 - cosap * cosap, 1.5) * dcosapdz * phiabs2;
+                                        termz3 = ep * epsilon0 * astre * dcosapdphiz * (1.0 - tan(al0) * abs(cosap) / sqrt(1.0 - cosap * cosap)) * phiabs2 * (2.0 * phidx * phidxx + 2.0 * phidy * phidxy + 2.0 * phidz * phidxz);
+                                        termz = termz0 + termz1 + termz2 + termz3;
+
+                                        termiikk = termx + termy + termz;
+                                    }
+                                    else
+                                    {
+                                        termiikk = pow(epsilon0 * (1.0 + astre / cos(al0)), 2.0) * (phidxx + phidyy + phidzz);
+                                    }
+                                }
+                                else
+                                {
+                                    termiikk = aij[ii][kk] * (phidxx + phidyy + phidzz);
+                                }
+
                                 termjjkk = aij[jj][kk] * (phidxx + phidyy + phidzz);
 
                                 sum1 += 0.5 * (termiikk - termjjkk) + (wij[ii][kk] - wij[jj][kk]) * phi[kk][i][j][k];
