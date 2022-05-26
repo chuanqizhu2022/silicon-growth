@@ -243,6 +243,9 @@ int main(int argc, char *argv[])
         double miijj;
 
         double al, al0m, As, P, COS, SIN;
+        double alii;
+
+        double phidxii, phidyii, phidzii, phiabs2ii, nxii, nyii, nzii;
 
         double xxp, xyp, xzp, yxp, yyp, yzp, zxp, zyp, zzp;
         double I1, I2, I3;
@@ -437,6 +440,17 @@ int main(int argc, char *argv[])
                     for (n1 = 1; n1 <= phiNum[i][j][k]; n1++)
                     {
                         ii = phiIdx[n1][i][j][k];
+
+                        phidxii = (phi[ii][ip][j][k] - phi[ii][im][j][k]) / 2.0 / dx;
+                        phidyii = (phi[ii][i][jp][k] - phi[ii][i][jm][k]) / 2.0 / dx;
+                        phidzii = (phi[ii][i][j][kp] - phi[ii][i][j][km]) / 2.0 / dx;
+                        phiabs2ii = phidxii * phidxii + phidyii * phidyii + phidzii * phidzii;
+                        nxii = phidxii / sqrt(phiabs2ii);
+                        nyii = phidyii / sqrt(phiabs2ii);
+                        nzii = phidzii / sqrt(phiabs2ii);
+
+                        alii = acos((abs(nxii) + abs(nyii) + abs(nzii)) / sqrt(3.0));
+
                         pddtt = 0.0;
                         for (n2 = 1; n2 <= phiNum[i][j][k]; n2++)
                         {
@@ -681,7 +695,19 @@ int main(int argc, char *argv[])
                             {
                                 F0 = 0.0;
                             }
-                            pddtt += -2.0 * mij[ii][jj] / (double)phiNum[i][j][k] * (sum1 - 8.0 / PI * F0 * sqrt(phi[ii][i][j][k] * phi[jj][i][j][k]));
+                            if (alii < (2.0 / 180.0 * PI))
+                            {
+                                miijj = mij[ii][jj] / 3.0;
+                            }
+                            else if ((alii >= (2.0 / 180.0 * PI)) && (alii < (4.0 / 180.0 * PI)))
+                            {
+                                miijj = (sin(90.0 * (alii - 3.0 / 180.0 * PI)) + 2.0) / 3.0 * mij[ii][jj];
+                            }
+                            else
+                            {
+                                miijj = mij[ii][jj];
+                            }
+                            pddtt += -2.0 * miijj / (double)phiNum[i][j][k] * (sum1 - 8.0 / PI * F0 * sqrt(phi[ii][i][j][k] * phi[jj][i][j][k]));
                         }
                         phi2[ii][i][j][k] = phi[ii][i][j][k] + pddtt * dtime;
                         if (phi2[ii][i][j][k] >= 1.0)
