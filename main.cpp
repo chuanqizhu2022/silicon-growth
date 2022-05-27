@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
     mobi = 1.68e-9;
     gamma0 = 0.5;
     astre = 1.0;
-    ee = 0.0;
+    ee = 0.01;
     al0 = 35.0 / 180.0 * PI;
     Tm = 1687.0;
     // dH = 0.7e7;
@@ -186,8 +186,12 @@ int main(int argc, char *argv[])
         }
     }
 
-    thij[0][1] = PI / 4.0;
-    thij[1][0] = PI / 4.0;
+    thij[0][1] = PI / 8.0;
+    thij[1][0] = PI / 8.0;
+    vpij[0][1] = PI / 8.0;
+    vpij[1][0] = PI / 8.0;
+    etaij[0][1] = PI / 8.0;
+    etaij[1][0] = PI / 8.0;
 
     for (ix = 0; ix <= ndmx; ix++)
     {
@@ -243,11 +247,12 @@ int main(int argc, char *argv[])
         double miijj;
 
         double al, al0m, As, P, COS, SIN;
-        double alii;
+        double alpii;
 
         double phidxii, phidyii, phidzii, phiabs2ii, nxii, nyii, nzii;
 
         double xxp, xyp, xzp, yxp, yyp, yzp, zxp, zyp, zzp;
+        double xxpii, xypii, xzpii, yxpii, yypii, yzpii, zxpii, zypii, zzpii;
         double cosap, ep;
         double dcosapdphix, dcosapdphiy, dcosapdphiz;
         double dphiabs2dx, dphiabs2dy, dphiabs2dz;
@@ -255,6 +260,7 @@ int main(int argc, char *argv[])
         double dcosapdx, dcosapdy, dcosapdz;
 
         double nxp, nyp, nzp;
+        double nxpii, nypii, nzpii;
         double nxpx, nxpy, nxpz;
         double nypx, nypy, nypz;
         double nzpx, nzpy, nzpz;
@@ -286,6 +292,7 @@ int main(int argc, char *argv[])
 
         double phidx, phidy, phidz;
         double phidxp, phidyp, phidzp;
+        double phidxpii, phidypii, phidzpii;
         double phidxx, phidyy, phidzz;
         double phidxpx, phidypx, phidzpx;
         double phidxpy, phidypy, phidzpy;
@@ -454,11 +461,6 @@ int main(int argc, char *argv[])
                         phidyii = (phi[ii][i][jp][k] - phi[ii][i][jm][k]) / 2.0 / dx;
                         phidzii = (phi[ii][i][j][kp] - phi[ii][i][j][km]) / 2.0 / dx;
                         phiabs2ii = phidxii * phidxii + phidyii * phidyii + phidzii * phidzii;
-                        nxii = phidxii / sqrt(phiabs2ii);
-                        nyii = phidyii / sqrt(phiabs2ii);
-                        nzii = phidzii / sqrt(phiabs2ii);
-
-                        alii = acos((abs(nxii) + abs(nyii) + abs(nzii)) / sqrt(3.0));
 
                         pddtt = 0.0;
                         for (n2 = 1; n2 <= phiNum[i][j][k]; n2++)
@@ -884,19 +886,44 @@ int main(int argc, char *argv[])
                             {
                                 F0 = 0.0;
                             }
-                            // if (alii < (2.0 / 180.0 * PI))
-                            // {
-                            //     miijj = mij[ii][jj] / 3.0;
-                            // }
-                            // else if ((alii >= (2.0 / 180.0 * PI)) && (alii < (4.0 / 180.0 * PI)))
-                            // {
-                            //     miijj = (sin(90.0 * (alii - 3.0 / 180.0 * PI)) + 2.0) / 3.0 * mij[ii][jj];
-                            // }
-                            // else
-                            // {
-                            //     miijj = mij[ii][jj];
-                            // }
-                            pddtt += -2.0 * mij[ii][jj] / (double)phiNum[i][j][k] * (sum1 - 8.0 / PI * F0 * sqrt(phi[ii][i][j][k] * phi[jj][i][j][k]));
+
+                            thii = thij[ii][jj];
+                            vpii = vpij[ii][jj];
+                            etaii = etaij[ii][jj];
+
+                            xxpii = cos(thii) * cos(vpii);
+                            yxpii = sin(thii) * cos(vpii);
+                            zxpii = sin(vpii);
+                            xypii = -sin(thii) * cos(etaii) - cos(thii) * sin(vpii) * sin(etaii);
+                            yypii = cos(thii) * cos(etaii) - sin(thii) * sin(vpii) * sin(etaii);
+                            zypii = cos(vpii) * sin(etaii);
+                            xzpii = sin(etaii) * sin(thii) - cos(etaii) * cos(thii) * sin(vpii);
+                            yzpii = -sin(etaii) * cos(thii) - cos(etaii) * sin(thii) * sin(vpii);
+                            zzpii = cos(etaii) * cos(vpii);
+
+                            phidxpii = phidxii * xxpii + phidyii * yxpii + phidzii * zxpii;
+                            phidypii = phidxii * xypii + phidyii * yypii + phidzii * zypii;
+                            phidzpii = phidxii * xzpii + phidyii * yzpii + phidzii * zzpii;
+
+                            nxpii = phidxpii / sqrt(phiabs2ii);
+                            nypii = phidypii / sqrt(phiabs2ii);
+                            nzpii = phidzpii / sqrt(phiabs2ii);
+
+                            alpii = acos((abs(nxpii) + abs(nypii) + abs(nzpii)) / sqrt(3.0));
+
+                            if (alpii < (2.0 / 180.0 * PI))
+                            {
+                                miijj = mij[ii][jj] / 3.0;
+                            }
+                            else if ((alpii >= (2.0 / 180.0 * PI)) && (alpii < (4.0 / 180.0 * PI)))
+                            {
+                                miijj = (sin(90.0 * (alpii - 3.0 / 180.0 * PI)) + 2.0) / 3.0 * mij[ii][jj];
+                            }
+                            else
+                            {
+                                miijj = mij[ii][jj];
+                            }
+                            pddtt += -2.0 * miijj / (double)phiNum[i][j][k] * (sum1 - 8.0 / PI * F0 * sqrt(phi[ii][i][j][k] * phi[jj][i][j][k]));
                         }
                         phi2[ii][i][j][k] = phi[ii][i][j][k] + pddtt * dtime;
                         if (phi2[ii][i][j][k] >= 1.0)
