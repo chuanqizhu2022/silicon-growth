@@ -10,7 +10,7 @@ using namespace cimg_library;
 #define RND(x) ((double)(x) / RAND_MAX * rand()) //乱数の関数設定
 
 #define NDX 64 //差分計算における計算領域一辺の分割数
-#define NDY 32
+#define NDY 8
 #define NDZ 64
 
 #define N 3
@@ -201,13 +201,13 @@ int main(int argc, char *argv[])
         {
             for (iz = 0; iz <= ndmz; iz++)
             {
-                // if (iz < NDZ / 4 && ix < NDX / 2)
-                if ((ix - NDX / 4) * (ix - NDX / 4) + (iy - NDY / 2) * (iy - NDY / 2) + (iz - NDZ / 4) * (iz - NDZ / 4) <= (NDX / 4) * (NDX / 4))
+                if (iz < NDZ / 4 && ix < NDX / 4)
+                // if ((ix - NDX / 4) * (ix - NDX / 4) + (iy - NDY / 2) * (iy - NDY / 2) + (iz - NDZ / 4) * (iz - NDZ / 4) <= (NDX / 4) * (NDX / 4))
                 {
                     phi[1][ix][iy][iz] = 1.0;
                 }
-                else if ((ix - NDX * 3 / 4) * (ix - NDX * 3 / 4) + (iy - NDY / 2) * (iy - NDY / 2) + (iz - NDZ / 4) * (iz - NDZ / 4) <= (NDX / 4) * (NDX / 4))
-                // else if (iz < NDZ / 4 && ix >= NDX / 2)
+                // else if ((ix - NDX * 3 / 4) * (ix - NDX * 3 / 4) + (iy - NDY / 2) * (iy - NDY / 2) + (iz - NDZ / 4) * (iz - NDZ / 4) <= (NDX / 4) * (NDX / 4))
+                else if (iz < NDZ / 4 && ix >= NDX * 3 / 4)
                 {
                     phi[2][ix][iy][iz] = 1.0;
                 }
@@ -388,19 +388,19 @@ int main(int argc, char *argv[])
                     }
                     if (j == ndmy)
                     {
-                        jp = 0;
+                        jp = ndmy;
                     }
                     if (j == 0)
                     {
-                        jm = ndmy;
+                        jm = 0;
                     }
                     if (k == ndmz)
                     {
-                        kp = 0;
+                        kp = ndmz;
                     }
                     if (k == 0)
                     {
-                        km = ndmz;
+                        km = 0;
                     }
                     phinum = 0;
                     for (ii = 0; ii <= nm; ii++)
@@ -446,19 +446,19 @@ int main(int argc, char *argv[])
                     }
                     if (j == ndmy)
                     {
-                        jp = 0;
+                        jp = ndmy;
                     }
                     if (j == 0)
                     {
-                        jm = ndmy;
+                        jm = 0;
                     }
                     if (k == ndmz)
                     {
-                        kp = 0;
+                        kp = ndmz;
                     }
                     if (k == 0)
                     {
-                        km = ndmz;
+                        km = 0;
                     }
 
                     for (n1 = 1; n1 <= phiNum[i][j][k]; n1++)
@@ -603,7 +603,11 @@ int main(int argc, char *argv[])
                                     SIN = sqrt((3.0 - 2.0 * P + 3.0 * ee * ee) / 3.0);
                                     As = 1.0 + astre * (COS + SIN * tan(al0));
 
-                                    if (al < al0m && al > 1.0e-2)
+                                    if (al >= al0m)
+                                    {
+                                        termiikk = aij[ii][kk] * pow(1.0 + astre * (sqrt(cos(al) * cos(al) + ee * ee) + tan(al0) * sqrt(sin(al) * sin(al) + ee * ee)), 2.0) * (phidxx + phidyy + phidzz);
+                                    }
+                                    else if (al < al0m && al > 1.0e-2)
                                     {
                                         epsilon0 = sqrt(aij[ii][kk]);
 
@@ -665,10 +669,6 @@ int main(int argc, char *argv[])
 
                                         termiikk = termx + termy + termz;
                                     }
-                                    else if (al <= 1.0e-2)
-                                    {
-                                        termiikk = aij[ii][kk] * pow(1.0 + astre * (sqrt(cos(al) * cos(al) + ee * ee) + tan(al0) * sqrt(sin(al) * sin(al) + ee * ee)), 2.0) * (phidxx + phidyy + phidzz);
-                                    }
                                     else
                                     {
                                         termiikk = aij[ii][kk] * pow(1.0 + astre * sqrt((1.0 + 2.0 * ee * ee) * (1.0 + tan(al0) * tan(al0))), 2.0) * (phidxx + phidyy + phidzz);
@@ -676,7 +676,7 @@ int main(int argc, char *argv[])
                                 }
                                 else
                                 {
-                                    termiikk = aij[ii][kk] * (phidxx + phidyy + phidzz);
+                                    termiikk = aij[ii][kk] * pow(2.5, 2.0) * (phidxx + phidyy + phidzz);
                                 }
 
                                 if (anij[jj][kk] == 1)
@@ -800,7 +800,11 @@ int main(int argc, char *argv[])
                                     SIN = sqrt((3.0 - 2.0 * P + 3.0 * ee * ee) / 3.0);
                                     As = 1.0 + astre * (COS + SIN * tan(al0));
 
-                                    if (al < al0m && al > 1.0e-2)
+                                    if (al >= al0m)
+                                    {
+                                        termjjkk = aij[jj][kk] * pow(1.0 + astre * (sqrt(cos(al) * cos(al) + ee * ee) + tan(al0) * sqrt(sin(al) * sin(al) + ee * ee)), 2.0) * (phidxx + phidyy + phidzz);
+                                    }
+                                    else if (al < al0m && al > 1.0e-2)
                                     {
                                         epsilon0 = sqrt(aij[jj][kk]);
 
@@ -862,10 +866,6 @@ int main(int argc, char *argv[])
 
                                         termjjkk = termx + termy + termz;
                                     }
-                                    else if (al <= 1.0e-2)
-                                    {
-                                        termjjkk = aij[jj][kk] * pow(1.0 + astre * (sqrt(cos(al) * cos(al) + ee * ee) + tan(al0) * sqrt(sin(al) * sin(al) + ee * ee)), 2.0) * (phidxx + phidyy + phidzz);
-                                    }
                                     else
                                     {
                                         termjjkk = aij[jj][kk] * pow(1.0 + astre * sqrt((1.0 + 2.0 * ee * ee) * (1.0 + tan(al0) * tan(al0))), 2.0) * (phidxx + phidyy + phidzz);
@@ -873,7 +873,7 @@ int main(int argc, char *argv[])
                                 }
                                 else
                                 {
-                                    termjjkk = aij[jj][kk] * (phidxx + phidyy + phidzz);
+                                    termjjkk = aij[jj][kk] * pow(2.5, 2.0) * (phidxx + phidyy + phidzz);
                                 }
 
                                 sum1 += 0.5 * (termiikk - termjjkk) + (wij[ii][kk] - wij[jj][kk]) * phi[kk][i][j][k];
