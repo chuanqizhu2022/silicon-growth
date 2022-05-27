@@ -9,11 +9,11 @@
 using namespace cimg_library;
 #define RND(x) ((double)(x) / RAND_MAX * rand()) //乱数の関数設定
 
-#define NDX 128 //差分計算における計算領域一辺の分割数
-#define NDY 128
-#define NDZ 1
+#define NDX 64 //差分計算における計算領域一辺の分割数
+#define NDY 32
+#define NDZ 64
 
-#define N 2
+#define N 3
 #define PI 3.141592
 
 int ndmx = NDX - 1;
@@ -186,8 +186,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    // thij[0][1] = PI / 4.0;
-    // thij[1][0] = PI / 4.0;
+    thij[0][1] = PI / 4.0;
+    thij[1][0] = PI / 4.0;
+    thij[0][2] = PI / 4.0;
+    thij[2][0] = PI / 4.0;
     // vpij[0][1] = PI / 8.0;
     // vpij[1][0] = PI / 8.0;
     // etaij[0][1] = PI / 8.0;
@@ -200,15 +202,15 @@ int main(int argc, char *argv[])
             for (iz = 0; iz <= ndmz; iz++)
             {
                 // if (iz < NDZ / 4 && ix < NDX / 2)
-                if ((ix - NDX / 2) * (ix - NDX / 2) + (iy - NDY / 2) * (iy - NDY / 2) + (iz - NDZ / 2) * (iz - NDZ / 2) <= (NDX / 4) * (NDX / 4))
+                if ((ix - NDX / 4) * (ix - NDX / 4) + (iy - NDY / 2) * (iy - NDY / 2) + (iz - NDZ / 4) * (iz - NDZ / 4) <= (NDX / 4) * (NDX / 4))
                 {
                     phi[1][ix][iy][iz] = 1.0;
                 }
-                // else if ((ix - NDX / 4) * (ix - NDX / 4) + (iy - NDY / 4) * (iy - NDY / 4) + (iz - NDZ * 3 / 4) * (iz - NDZ * 3 / 4) <= (NDX / 4) * (NDX / 4))
+                else if ((ix - NDX * 3 / 4) * (ix - NDX * 3 / 4) + (iy - NDY / 2) * (iy - NDY / 2) + (iz - NDZ / 4) * (iz - NDZ / 4) <= (NDX / 4) * (NDX / 4))
                 // else if (iz < NDZ / 4 && ix >= NDX / 2)
-                // {
-                //     phi[2][ix][iy][iz] = 1.0;
-                // }
+                {
+                    phi[2][ix][iy][iz] = 1.0;
+                }
                 else
                 {
                     phi[0][ix][iy][iz] = 1.0;
@@ -922,7 +924,7 @@ int main(int argc, char *argv[])
                                 // alpii = acos((abs(nxpii) + abs(nypii)) / sqrt(2.0));
 
                                 // 3D
-                                alpii = acos((abs(nxpii) + abs(nypii)) / sqrt(2.0));
+                                alpii = acos((abs(nxpii) + abs(nypii) + abs(nzpii)) / sqrt(3.0));
 
                                 if (alpii < (2.0 / 180.0 * PI))
                                 {
